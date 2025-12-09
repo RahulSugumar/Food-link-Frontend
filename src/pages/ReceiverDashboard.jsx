@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, MapPin, Clock, AlertCircle, RefreshCcw, User, Phone, X } from 'lucide-react';
+import { Search, MapPin, Clock, AlertCircle, RefreshCcw, User, Phone, X, Bell } from 'lucide-react';
 
 const ReceiverDashboard = () => {
     const [showRequestForm, setShowRequestForm] = useState(false);
@@ -9,6 +9,30 @@ const ReceiverDashboard = () => {
 
     // State to show donor details after full claim
     const [claimedItem, setClaimedItem] = useState(null);
+
+    // Notification State
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    const fetchNotifications = async () => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+
+        try {
+            const res = await axios.get(`http://localhost:5000/api/notifications/${user.id}`);
+            setNotifications(res.data);
+        } catch (err) {
+            console.error('Error fetching notifications:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+        // Poll for notifications every 10 seconds for demo
+        const interval = setInterval(fetchNotifications, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     const fetchFeed = async () => {
         try {
