@@ -21,6 +21,7 @@ const ReceiverDashboard = () => {
 
         try {
             const res = await axios.get(`http://localhost:5000/api/notifications/${user.id}`);
+            console.log('Notifications fetched:', res.data); // DEBUG
             setNotifications(res.data);
         } catch (err) {
             console.error('Error fetching notifications:', err);

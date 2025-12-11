@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Heart, User, ArrowLeft, Mail, Lock } from 'lucide-react';
+import { Heart, User, ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const AuthPage = () => {
     const navigate = useNavigate();
     const [role, setRole] = useState('donor'); // 'donor', 'receiver', 'volunteer'
     const [isLogin, setIsLogin] = useState(false); // Default to Register as per request
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -19,15 +20,15 @@ const AuthPage = () => {
 
         // SIMULATION: Injecting dummy coordinates for demo
         // Center point: 12.9716, 77.5946 (Bangalore)
-        // Donor gets one loc, Receiver gets nearby loc (within 5km)
+        // Range: ~0.005 degrees is approx 500m. This ensures users are ALWAYS "nearby" (within 10km)
         const dummyLoc = {
-            lat: 12.9716 + (Math.random() * 0.02),
-            lng: 77.5946 + (Math.random() * 0.02),
+            lat: 12.9716 + (Math.random() * 0.005),
+            lng: 77.5946 + (Math.random() * 0.005),
             address: 'Simulator Location, Bangalore'
         };
 
         const payload = isLogin
-            ? { email, password }
+            ? { email, password, role }
             : { email, password, role, name, location: dummyLoc };
 
         try {
@@ -76,38 +77,38 @@ const AuthPage = () => {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                {/* Role Selection - Always show so user can select which portal to login/register to */}
+                <div>
+
+                    <div className="mt-2 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setRole('donor')}
+                            className={`flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${role === 'donor'
+                                ? 'border-brand-orange ring-1 ring-brand-orange text-brand-orange bg-orange-50'
+                                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                                }`}
+                        >
+                            Donate Food
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRole('receiver')}
+                            className={`flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${role === 'receiver'
+                                ? 'border-brand-green ring-1 ring-brand-green text-brand-green bg-green-50'
+                                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                                }`}
+                        >
+                            Find Food
+                        </button>
+                    </div>
+                </div>
+
+
+
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+
                     <form className="space-y-6" onSubmit={handleAuth}>
-
-                        {/* Role Selection - Only show for Registration or if relevant for login */}
-                        {!isLogin && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">I want to...</label>
-                                <div className="mt-2 grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setRole('donor')}
-                                        className={`flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${role === 'donor'
-                                            ? 'border-brand-orange ring-1 ring-brand-orange text-brand-orange bg-orange-50'
-                                            : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        Donate Food
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setRole('receiver')}
-                                        className={`flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${role === 'receiver'
-                                            ? 'border-brand-green ring-1 ring-brand-green text-brand-green bg-green-50'
-                                            : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        Find Food
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Common Fields */}
                         {!isLogin && (
                             <div>
@@ -137,7 +138,20 @@ const AuthPage = () => {
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Lock className="h-5 w-5 text-gray-400" />
                                 </div>
-                                <input id="password" name="password" type="password" required className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border" />
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
                             </div>
                         </div>
 

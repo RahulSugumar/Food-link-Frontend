@@ -4,13 +4,24 @@ import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw } from 'lucide-react
 
 const DonorDashboard = () => {
     const [showDonateForm, setShowDonateForm] = useState(false);
-    const [donations, setDonations] = useState([]);
+    const [myDonations, setMyDonations] = useState([]);
+    const [recentDonations, setRecentDonations] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const fetchDonations = async () => {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+
         try {
-            const res = await axios.get('http://localhost:5000/api/donations');
-            setDonations(res.data);
+            // Fetch Community Recent
+            const recentRes = await axios.get('http://localhost:5000/api/donations/recent');
+            setRecentDonations(recentRes.data);
+
+            // Fetch My Donations (if logged in)
+            if (user && user.id) {
+                const myRes = await axios.get(`http://localhost:5000/api/donations/donor/${user.id}`);
+                setMyDonations(myRes.data);
+            }
         } catch (err) {
             console.error(err);
         }
@@ -26,22 +37,48 @@ const DonorDashboard = () => {
         const formData = new FormData(e.target);
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
+        const addressInput = formData.get('location');
 
         if (!user) {
             alert("You must be logged in to donate.");
             return;
         }
 
+        let finalLocation = null;
+
+        // Geocode the address
+        try {
+            const geoRes = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput)}`);
+            if (geoRes.data && geoRes.data.length > 0) {
+                finalLocation = {
+                    lat: parseFloat(geoRes.data[0].lat),
+                    lng: parseFloat(geoRes.data[0].lon),
+                    address: addressInput
+                };
+            } else {
+                // If geocoding fails, fallback to user's registered location if available
+                console.warn("Address not found, falling back to user location");
+                if (user.location) {
+                    finalLocation = user.location; // Inherit donor's profile location
+                } else {
+                    // Last resort fallback (should prefer not to use this)
+                    finalLocation = {
+                        lat: 12.9716,
+                        lng: 77.5946,
+                        address: addressInput + " (Approx)"
+                    };
+                }
+            }
+        } catch (error) {
+            console.error("Geocoding failed:", error);
+            finalLocation = user.location || { lat: 12.9716, lng: 77.5946, address: addressInput };
+        }
+
         const data = {
             donor_id: user.id,
-            food_type: formData.get('food_item'), // Mapping input name 'food_item' to backend 'food_type'
+            food_type: formData.get('food_item'),
             quantity: formData.get('quantity'),
-            // SIMULATION: Injecting dummy coordinates for demo
-            location: {
-                address: formData.get('location'),
-                lat: 12.9716 + (Math.random() * 0.01), // Slightly different spot
-                lng: 77.5946 + (Math.random() * 0.01)
-            },
+            location: finalLocation,
             status: 'available',
             expiry_time: new Date(Date.now() + parseInt(formData.get('expiry_hours')) * 3600000).toISOString()
         };
@@ -125,43 +162,84 @@ const DonorDashboard = () => {
                     </div>
                 )}
 
-                {/* Active Listings */}
-                <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex justify-between items-center">
-                        Your Active Listings
-                        <button onClick={fetchDonations} className="text-gray-400 hover:text-brand-orange"><RefreshCcw size={18} /></button>
-                    </h3>
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                        {donations.length === 0 ? (
-                            <div className="p-6 text-center text-gray-500">No active donations. Start sharing now!</div>
-                        ) : (
-                            <ul role="list" className="divide-y divide-gray-200">
-                                {donations.map((donation) => (
-                                    <li key={donation.id}>
-                                        <div className="px-4 py-4 sm:px-6">
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-sm font-medium text-brand-orange truncate">{donation.food_type} ({donation.quantity} servings)</p>
-                                                <div className="ml-2 flex-shrink-0 flex">
-                                                    <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${donation.status === 'reserved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                                        }`}>
-                                                        {donation.status}
-                                                    </p>
+                {/* Content Sections */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                    {/* Section 1: My Donations */}
+                    <div>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex justify-between items-center">
+                            My Donations
+                            <button onClick={fetchDonations} className="text-gray-400 hover:text-brand-orange"><RefreshCcw size={18} /></button>
+                        </h3>
+                        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                            {myDonations.length === 0 ? (
+                                <div className="p-6 text-center text-gray-500">You haven't made any donations yet.</div>
+                            ) : (
+                                <ul role="list" className="divide-y divide-gray-200">
+                                    {myDonations.map((donation) => (
+                                        <li key={donation.id}>
+                                            <div className="px-4 py-4 sm:px-6">
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-brand-orange truncate">{donation.food_type}</p>
+                                                    <div className="ml-2 flex-shrink-0 flex">
+                                                        <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${donation.status === 'reserved' ? 'bg-green-100 text-green-800' :
+                                                            donation.status === 'completed' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'
+                                                            }`}>
+                                                            {donation.status}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-2 text-xs text-gray-500">
+                                                    Quantity: {donation.quantity} • Posted: {new Date(donation.created_at).toLocaleDateString()}
                                                 </div>
                                             </div>
-                                            <div className="mt-2 sm:flex sm:justify-between">
-                                                <div className="sm:flex">
-                                                    <p className="flex items-center text-sm text-gray-500">
-                                                        <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                                                        {donation.location?.address || 'Location N/A'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Section 2: Community Activity */}
+                    <div>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            Community Activity
+                        </h3>
+                        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                            {recentDonations.length === 0 ? (
+                                <div className="p-6 text-center text-gray-500">No recent activity.Be the first!</div>
+                            ) : (
+                                <ul role="list" className="divide-y divide-gray-200">
+                                    {recentDonations.map((donation) => (
+                                        <li key={donation.id}>
+                                            <div className="px-4 py-4 sm:px-6">
+                                                <div className="flex items-center">
+                                                    <div className="flex-shrink-0">
+                                                        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 font-bold">
+                                                            {donation.profiles?.name ? donation.profiles.name.charAt(0).toUpperCase() : '?'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {donation.profiles?.name || 'Anonymous'} posted a donation
+                                                        </p>
+                                                        <p className="text-sm text-gray-500">
+                                                            {donation.food_type} ({donation.quantity} servings)
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            <Clock className="inline h-3 w-3 mr-1" />
+                                                            {new Date(donation.created_at).toLocaleTimeString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+
                 </div>
             </main>
         </div>
