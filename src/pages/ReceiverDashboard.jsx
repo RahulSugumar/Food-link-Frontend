@@ -13,16 +13,39 @@ const ReceiverDashboard = () => {
     // Notification State
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
+    const notificationRef = React.useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                setShowNotifications(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const fetchNotifications = async () => {
         const userStr = localStorage.getItem('user');
-        if (!userStr) return;
+        if (!userStr) {
+            console.log('No user found in localStorage');
+            return;
+        }
         const user = JSON.parse(userStr);
+        console.log('Fetching notifications for User ID:', user.id);
 
         try {
             const res = await axios.get(`http://localhost:5000/api/notifications/${user.id}`);
-            console.log('Notifications fetched:', res.data); // DEBUG
-            setNotifications(res.data);
+            console.log('API Response:', res.status, res.data);
+            if (Array.isArray(res.data)) {
+                console.log('Notification Count:', res.data.length);
+                setNotifications(res.data);
+            } else {
+                console.error('Expected array but got:', typeof res.data);
+            }
         } catch (err) {
             console.error('Error fetching notifications:', err);
         }
@@ -92,12 +115,12 @@ const ReceiverDashboard = () => {
                     <h1 className="text-xl font-bold text-brand-green">FoodBridge Receiver</h1>
                     <div className="flex items-center space-x-4">
                         {/* Notification Bell */}
-                        <div className="relative">
+                        <div className="relative" ref={notificationRef}>
                             <button onClick={() => setShowNotifications(!showNotifications)} className="text-gray-500 hover:text-brand-green focus:outline-none relative">
                                 <Bell className="h-6 w-6" />
-                                {notifications.length > 0 && (
+                                {notifications.filter(n => !n.is_read).length > 0 && (
                                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                                        {notifications.length}
+                                        {notifications.filter(n => !n.is_read).length}
                                     </span>
                                 )}
                             </button>
@@ -107,11 +130,24 @@ const ReceiverDashboard = () => {
                                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
                                     <div className="px-4 py-2 border-b border-gray-100 font-semibold text-gray-700">Notifications</div>
                                     <div className="max-h-64 overflow-y-auto">
-                                        {notifications.length === 0 ? (
+                                        {notifications.filter(n => !n.is_read).length === 0 ? (
                                             <div className="px-4 py-3 text-sm text-gray-500 text-center">No new alerts</div>
                                         ) : (
-                                            notifications.map(notif => (
-                                                <div key={notif.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                                            notifications.filter(n => !n.is_read).map(notif => (
+                                                <div
+                                                    key={notif.id}
+                                                    onClick={async () => {
+                                                        try {
+                                                            // Optimistic update
+                                                            setNotifications(prev => prev.filter(n => n.id !== notif.id));
+                                                            // API call
+                                                            await axios.put(`http://localhost:5000/api/notifications/${notif.id}/read`);
+                                                        } catch (err) {
+                                                            console.error('Failed to mark as read', err);
+                                                        }
+                                                    }}
+                                                    className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 cursor-pointer transition-colors"
+                                                >
                                                     <p className="text-sm text-gray-800">{notif.message}</p>
                                                     <p className="text-xs text-gray-400 mt-1">{new Date(notif.created_at).toLocaleTimeString()}</p>
                                                 </div>

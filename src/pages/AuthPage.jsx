@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Heart, User, ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Heart, User, ArrowLeft, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react';
 
 const AuthPage = () => {
     const navigate = useNavigate();
@@ -15,6 +15,7 @@ const AuthPage = () => {
         const email = formData.get('email');
         const password = formData.get('password');
         const name = formData.get('name');
+        const phone = formData.get('phone');
 
         const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
 
@@ -29,7 +30,7 @@ const AuthPage = () => {
 
         const payload = isLogin
             ? { email, password, role }
-            : { email, password, role, name, location: dummyLoc };
+            : { email, password, role, name, phone, location: dummyLoc };
 
         try {
             const response = await axios.post(endpoint, payload);
@@ -111,15 +112,27 @@ const AuthPage = () => {
                     <form className="space-y-6" onSubmit={handleAuth}>
                         {/* Common Fields */}
                         {!isLogin && (
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <User className="h-5 w-5 text-gray-400" />
+                            <>
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                                    <div className="mt-1 relative rounded-md shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input id="name" name="name" type="text" required className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border" placeholder="John Doe" />
                                     </div>
-                                    <input id="name" name="name" type="text" required className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border" placeholder="John Doe" />
                                 </div>
-                            </div>
+
+                                <div>
+                                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                                    <div className="mt-1 relative rounded-md shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Phone className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input id="phone" name="phone" type="tel" required className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border" placeholder="+91 98765 43210" />
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         <div>
