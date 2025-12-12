@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw } from 'lucide-react';
+import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw, ArrowLeft } from 'lucide-react';
+import LocationPicker from '../components/LocationPicker'; // Import component
 
 const DonorDashboard = () => {
     const [showDonateForm, setShowDonateForm] = useState(false);
     const [myDonations, setMyDonations] = useState([]);
     const [recentDonations, setRecentDonations] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState(null); // Map state
 
     const fetchDonations = async () => {
         const userStr = localStorage.getItem('user');
@@ -44,35 +47,12 @@ const DonorDashboard = () => {
             return;
         }
 
-        let finalLocation = null;
-
-        // Geocode the address
-        try {
-            const geoRes = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput)}`);
-            if (geoRes.data && geoRes.data.length > 0) {
-                finalLocation = {
-                    lat: parseFloat(geoRes.data[0].lat),
-                    lng: parseFloat(geoRes.data[0].lon),
-                    address: addressInput
-                };
-            } else {
-                // If geocoding fails, fallback to user's registered location if available
-                console.warn("Address not found, falling back to user location");
-                if (user.location) {
-                    finalLocation = user.location; // Inherit donor's profile location
-                } else {
-                    // Last resort fallback (should prefer not to use this)
-                    finalLocation = {
-                        lat: 12.9716,
-                        lng: 77.5946,
-                        address: addressInput + " (Approx)"
-                    };
-                }
-            }
-        } catch (error) {
-            console.error("Geocoding failed:", error);
-            finalLocation = user.location || { lat: 12.9716, lng: 77.5946, address: addressInput };
-        }
+        // Use map location if selected, otherwise fallback to user profile location, else default
+        let finalLocation = selectedLocation || user.location || {
+            lat: 12.9716,
+            lng: 77.5946,
+            address: "Bangalore (Default)"
+        };
 
         const data = {
             donor_id: user.id,
@@ -96,12 +76,19 @@ const DonorDashboard = () => {
         }
     };
 
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navbar Placeholder */}
             <div className="bg-white shadow-sm p-4 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-brand-orange">FoodBridge Donor</h1>
+                    <div className="flex items-center space-x-3">
+                        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700">
+                            <ArrowLeft className="h-6 w-6" />
+                        </button>
+                        <h1 className="text-xl font-bold text-brand-orange">FoodBridge Donor</h1>
+                    </div>
                     <div className="flex items-center space-x-2">
                         <div className="bg-orange-100 text-brand-orange px-3 py-1 rounded-full text-sm font-medium">Impact: 45 Meals</div>
                         <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
@@ -140,8 +127,8 @@ const DonorDashboard = () => {
                                     <input name="quantity" type="number" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm" />
                                 </div>
                                 <div className="sm:col-span-3">
-                                    <label className="block text-sm font-medium text-gray-700">Pickup Location</label>
-                                    <input name="location" type="text" defaultValue="123 Main St (Default)" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm" />
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Location</label>
+                                    <LocationPicker onLocationSelect={setSelectedLocation} />
                                 </div>
                                 <div className="sm:col-span-3">
                                     <label className="block text-sm font-medium text-gray-700">Expires In</label>

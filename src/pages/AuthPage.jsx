@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Heart, User, ArrowLeft, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react';
+import LocationPicker from '../components/LocationPicker';
 
 const AuthPage = () => {
     const navigate = useNavigate();
     const [role, setRole] = useState('donor'); // 'donor', 'receiver', 'volunteer'
     const [isLogin, setIsLogin] = useState(false); // Default to Register as per request
     const [showPassword, setShowPassword] = useState(false);
+    const [location, setLocation] = useState(null); // { lat, lng, address } - Store full location object
+
+    const handleLocationSelect = (loc) => {
+        setLocation(loc);
+    };
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -19,18 +25,9 @@ const AuthPage = () => {
 
         const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
 
-        // SIMULATION: Injecting dummy coordinates for demo
-        // Center point: 12.9716, 77.5946 (Bangalore)
-        // Range: ~0.005 degrees is approx 500m. This ensures users are ALWAYS "nearby" (within 10km)
-        const dummyLoc = {
-            lat: 12.9716 + (Math.random() * 0.005),
-            lng: 77.5946 + (Math.random() * 0.005),
-            address: 'Simulator Location, Bangalore'
-        };
-
         const payload = isLogin
             ? { email, password, role }
-            : { email, password, role, name, phone, location: dummyLoc };
+            : { email, password, role, name, phone, location }; // Use selected location
 
         try {
             const response = await axios.post(endpoint, payload);
@@ -58,7 +55,16 @@ const AuthPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+            <div className="absolute top-4 left-4">
+                <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                    <ArrowLeft className="h-6 w-6 mr-2" />
+                    <span className="text-sm font-medium">Home</span>
+                </button>
+            </div>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center cursor-pointer" onClick={() => navigate('/')}>
                     <Heart className="h-12 w-12 text-brand-orange" />
@@ -131,6 +137,12 @@ const AuthPage = () => {
                                         </div>
                                         <input id="phone" name="phone" type="tel" required className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border" placeholder="+91 98765 43210" />
                                     </div>
+                                </div>
+
+                                {/* Location Picker */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                    <LocationPicker onLocationSelect={handleLocationSelect} />
                                 </div>
                             </>
                         )}
