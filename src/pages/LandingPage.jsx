@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Users, ArrowRight } from 'lucide-react';
+import FridgeLocator from '../components/FridgeLocator';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -98,14 +99,9 @@ const LandingPage = () => {
                         <p className="mt-4 text-lg text-gray-500">Real-time map and listing of available resources.</p>
                     </div>
 
-                    {/* Map Placeholder */}
-                    <div className="bg-gray-200 h-96 rounded-xl flex items-center justify-center relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gray-300 opacity-20 pattern-dots"></div>
-                        <div className="z-10 text-center">
-                            <MapPin className="h-16 w-16 text-brand-orange mx-auto mb-4" />
-                            <p className="text-xl font-bold text-gray-600">Interactive Map View</p>
-                            <p className="text-gray-500">Coming Soon</p>
-                        </div>
+                    {/* Interactive Fridge Map */}
+                    <div className="mt-8">
+                        <FridgeLocator />
                     </div>
                 </div>
             </div>
