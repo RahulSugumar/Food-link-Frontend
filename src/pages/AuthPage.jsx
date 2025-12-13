@@ -42,9 +42,9 @@ const AuthPage = () => {
             }
 
             if (role === 'donor') {
-                navigate('/donor/dashboard');
+                navigate('/donor-dashboard');
             } else if (role === 'receiver') {
-                navigate('/receiver/dashboard');
+                navigate('/receiver-dashboard');
             } else {
                 navigate('/');
             }

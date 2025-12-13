@@ -166,7 +166,9 @@ const ReceiverDashboard = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <button onClick={() => navigate('/profile')} className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center hover:ring-2 hover:ring-brand-green transition-all" title="My Profile">
+                            <span className="text-xs font-bold text-gray-600">ME</span>
+                        </button>
                     </div>
                 </div>
             </div>

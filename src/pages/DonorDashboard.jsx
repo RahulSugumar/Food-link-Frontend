@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw, ArrowLeft, Trash2 } from 'lucide-react';
 import LocationPicker from '../components/LocationPicker'; // Import component
 
 const DonorDashboard = () => {
@@ -33,6 +33,21 @@ const DonorDashboard = () => {
     useEffect(() => {
         fetchDonations();
     }, []);
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this donation?")) {
+            try {
+                await axios.delete(`http://localhost:5000/api/donations/${id}`);
+                setMyDonations(prev => prev.filter(d => d.id !== id));
+                // Also refresh recent list as it might be there
+                fetchDonations();
+                alert("Donation removed.");
+            } catch (err) {
+                console.error("Failed to delete", err);
+                alert("Failed to delete donation.");
+            }
+        }
+    };
 
     const handleDonate = async (e) => {
         e.preventDefault();
@@ -91,7 +106,9 @@ const DonorDashboard = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                         <div className="bg-orange-100 text-brand-orange px-3 py-1 rounded-full text-sm font-medium">Impact: 45 Meals</div>
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <button onClick={() => navigate('/profile')} className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center hover:ring-2 hover:ring-brand-orange transition-all" title="My Profile">
+                            <span className="text-xs font-bold text-gray-600">ME</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -176,8 +193,15 @@ const DonorDashboard = () => {
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="mt-2 text-xs text-gray-500">
-                                                    Quantity: {donation.quantity} • Posted: {new Date(donation.created_at).toLocaleDateString()}
+                                                <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                                                    <span>Quantity: {donation.quantity} • Posted: {new Date(donation.created_at).toLocaleDateString()}</span>
+                                                    <button
+                                                        onClick={() => handleDelete(donation.id)}
+                                                        className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
+                                                        title="Delete Donation"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </li>

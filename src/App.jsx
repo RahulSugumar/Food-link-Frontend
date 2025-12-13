@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import DonorDashboard from './pages/DonorDashboard';
 import ReceiverDashboard from './pages/ReceiverDashboard';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -11,8 +12,9 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/donor/dashboard" element={<DonorDashboard />} />
-        <Route path="/receiver/dashboard" element={<ReceiverDashboard />} />
+        <Route path="/donor-dashboard" element={<DonorDashboard />} />
+        <Route path="/receiver-dashboard" element={<ReceiverDashboard />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
     </Router>
   );
