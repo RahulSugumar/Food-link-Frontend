@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, MapPin, Clock, AlertCircle, Bell, Filter, ArrowLeft, RefreshCcw, User } from 'lucide-react';
+import { Search, MapPin, Clock, AlertCircle, Bell, Filter, ArrowLeft, RefreshCcw, User, CheckCircle, Phone } from 'lucide-react';
 
 const ReceiverDashboard = () => {
     const [showRequestForm, setShowRequestForm] = useState(false);
@@ -96,16 +96,35 @@ const ReceiverDashboard = () => {
         }
     };
 
-    const handleClaim = async (item) => {
+    const [confirmingDonation, setConfirmingDonation] = useState(null); // Item being claimed
+
+    const handleClaimClick = (item) => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            alert("Please login to claim.");
+            return;
+        }
+        setConfirmingDonation(item);
+    };
+
+    const confirmClaim = async (needsDelivery) => {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user || !confirmingDonation) return;
+
         try {
-            // Delete the item from DB but get its details back
-            const res = await axios.delete(`http://localhost:5000/api/donations/${item.id}`);
-            fetchFeed(); // Refresh feed to remove the item
-            // Show details of the item just claimed (using data returned from delete)
-            setClaimedItem(res.data.data);
+            await axios.put(`http://localhost:5000/api/donations/${confirmingDonation.id}/claim`, {
+                receiver_id: user.id,
+                delivery_needed: needsDelivery
+            });
+
+            fetchFeed();
+            setClaimedItem(confirmingDonation); // Show success details
+            setConfirmingDonation(null); // Close modal
+            alert(needsDelivery ? "Claimed! A volunteer will be notified." : "Claimed! Please collect it from the donor.");
         } catch (err) {
             console.error(err);
-            alert('Failed to claim food (it might already be taken).');
+            alert(err.response?.data?.error || 'Failed to claim food.');
         }
     };
 
@@ -218,10 +237,10 @@ const ReceiverDashboard = () => {
                                         )}
                                         <div className="mt-4 flex space-x-3">
                                             <button
-                                                onClick={() => handleClaim(item)}
-                                                className="flex-1 bg-brand-green text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 shadow-sm transition-colors"
+                                                onClick={() => handleClaimClick(item)}
+                                                className="w-full mt-3 bg-brand-green text-white py-2 rounded font-medium hover:bg-green-700 transition-colors"
                                             >
-                                                Claim Now
+                                                Claim Food
                                             </button>
                                         </div>
                                     </div>
@@ -341,6 +360,40 @@ const ReceiverDashboard = () => {
                                 </div>
                             </form>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Claim Confirmation Modal */}
+            {confirmingDonation && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-xl">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">How will you collect this?</h3>
+                        <p className="text-gray-600 mb-6">If you cannot travel, we can alert volunteers nearby.</p>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => confirmClaim(false)}
+                                className="w-full flex justify-between items-center px-4 py-3 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 font-medium"
+                            >
+                                <span>I will pick it up myself</span>
+                                <CheckCircle className="h-5 w-5" />
+                            </button>
+
+                            <button
+                                onClick={() => confirmClaim(true)}
+                                className="w-full flex justify-between items-center px-4 py-3 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 font-medium"
+                            >
+                                <span>I need volunteer delivery</span>
+                                <Clock className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setConfirmingDonation(null)}
+                            className="mt-4 w-full text-center text-gray-400 hover:text-gray-600 text-sm"
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </div>
             )}

@@ -72,8 +72,9 @@ const DonorDashboard = () => {
         const data = {
             donor_id: user.id,
             food_type: formData.get('food_item'),
-            quantity: formData.get('quantity'),
+            quantity: parseInt(formData.get('quantity')),
             location: finalLocation,
+            description: formData.get('description') || '',
             status: 'available',
             expiry_time: new Date(Date.now() + parseInt(formData.get('expiry_hours')) * 3600000).toISOString()
         };
@@ -138,6 +139,10 @@ const DonorDashboard = () => {
                                 <div className="sm:col-span-4">
                                     <label className="block text-sm font-medium text-gray-700">What are you donating?</label>
                                     <input name="food_item" type="text" required placeholder="e.g., 5kg Rice and Curry" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm" />
+                                </div>
+                                <div className="sm:col-span-4">
+                                    <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                                    <input name="description" type="text" placeholder="e.g., Veg, Non-Veg, Contains Nuts" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm" />
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700">Quantity (Servings)</label>

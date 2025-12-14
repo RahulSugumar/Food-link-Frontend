@@ -43,9 +43,12 @@ const ProfilePage = () => {
                 location: profile.location
             });
 
-            // Fetch History (Only for Donors for now)
+            // Fetch History based on role
             if (profile.role === 'donor') {
                 const historyRes = await axios.get(`http://localhost:5000/api/donations/donor/${localUser.id}`);
+                setHistory(historyRes.data);
+            } else if (profile.role === 'receiver') {
+                const historyRes = await axios.get(`http://localhost:5000/api/donations/receiver/${localUser.id}`);
                 setHistory(historyRes.data);
             }
 
@@ -212,6 +215,45 @@ const ProfilePage = () => {
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
                                                 ${item.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                                                 {item.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Receiver History (My Claims) */}
+                {user.role === 'receiver' && (
+                    <div className="mt-8">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <History className="h-5 w-5 mr-2 text-gray-500" /> My Claims
+                        </h3>
+
+                        <div className="bg-white shadow-sm rounded-lg border border-gray-200 divide-y divide-gray-200">
+                            {history.length === 0 ? (
+                                <div className="p-6 text-center text-gray-500">No claims made yet.</div>
+                            ) : (
+                                history.map(item => (
+                                    <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="font-semibold text-gray-900">{item.food_type}</p>
+                                                <p className="text-sm text-gray-500">{item.quantity} Servings • {new Date(item.created_at).toLocaleDateString()}</p>
+                                                <div className="mt-1 flex items-center text-xs text-gray-400">
+                                                    <MapPin className="h-3 w-3 mr-1" />
+                                                    {item.location?.address}
+                                                </div>
+                                                {item.profiles && (
+                                                    <div className="mt-1 text-xs text-blue-500 font-medium">
+                                                        Donor: {item.profiles.name} ({item.profiles.phone})
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                                                ${item.status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                {item.status === 'claimed' ? 'Waiting Pickup' : item.status}
                                             </span>
                                         </div>
                                     </div>

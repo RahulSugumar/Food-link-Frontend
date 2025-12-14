@@ -45,6 +45,8 @@ const AuthPage = () => {
                 navigate('/donor-dashboard');
             } else if (role === 'receiver') {
                 navigate('/receiver-dashboard');
+            } else if (role === 'volunteer') {
+                navigate('/volunteer-dashboard');
             } else {
                 navigate('/');
             }
@@ -87,7 +89,7 @@ const AuthPage = () => {
                 {/* Role Selection - Always show so user can select which portal to login/register to */}
                 <div>
 
-                    <div className="mt-2 grid grid-cols-2 gap-3">
+                    <div className="mt-2 grid grid-cols-3 gap-3">
                         <button
                             type="button"
                             onClick={() => setRole('donor')}
@@ -107,6 +109,16 @@ const AuthPage = () => {
                                 }`}
                         >
                             Find Food
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRole('volunteer')}
+                            className={`flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${role === 'volunteer'
+                                ? 'border-brand-blue ring-1 ring-brand-blue text-brand-blue bg-blue-50'
+                                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                                }`}
+                        >
+                            Volunteer
                         </button>
                     </div>
                 </div>
@@ -186,7 +198,7 @@ const AuthPage = () => {
                                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${role === 'receiver' ? 'bg-brand-green hover:bg-green-700' : 'bg-brand-orange hover:bg-orange-700'
                                     } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange transition-colors`}
                             >
-                                {isLogin ? 'Sign In' : `Register as ${role === 'donor' ? 'Donor' : 'Receiver'}`}
+                                {isLogin ? 'Sign In' : `Register as ${role === 'donor' ? 'Donor' : role === 'receiver' ? 'Receiver' : 'Volunteer'}`}
                             </button>
                         </div>
                     </form>
