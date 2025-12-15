@@ -251,10 +251,26 @@ const ProfilePage = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                                ${item.status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                                {item.status === 'claimed' ? 'Waiting Pickup' : item.status}
-                                            </span>
+                                            <div className="flex flex-col items-end">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize mb-1
+                                                    ${item.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                                        item.status === 'in_transit' ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-yellow-100 text-yellow-800'}`}>
+                                                    {item.status === 'claimed' ? 'Waiting Pickup' :
+                                                        item.status === 'in_transit' ? 'On the Way' : item.status}
+                                                </span>
+
+                                                {/* Show Volunteer info if in_transit */}
+                                                {item.status === 'in_transit' && item.volunteer && (
+                                                    <div className="text-xs text-right text-gray-500">
+                                                        <p className="font-medium text-gray-700">Volunteer:</p>
+                                                        <p>{item.volunteer.name}</p>
+                                                        <p className="flex items-center justify-end text-brand-blue">
+                                                            <Phone className="h-3 w-3 mr-1" /> {item.volunteer.phone}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))

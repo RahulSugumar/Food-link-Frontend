@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, MapPin, Clock, AlertCircle, Bell, Filter, ArrowLeft, RefreshCcw, User, CheckCircle, Phone } from 'lucide-react';
+import { Search, MapPin, Clock, AlertCircle, Bell, Filter, ArrowLeft, RefreshCcw, User, CheckCircle, Phone, MessageCircle } from 'lucide-react';
+import ChatModal from '../components/ChatModal';
 
 const ReceiverDashboard = () => {
     const [showRequestForm, setShowRequestForm] = useState(false);
@@ -30,13 +31,14 @@ const ReceiverDashboard = () => {
         };
     }, []);
 
+    const [user, setUser] = useState(null);
+    useEffect(() => {
+        const u = localStorage.getItem('user');
+        if (u) setUser(JSON.parse(u));
+    }, []);
+
     const fetchNotifications = async () => {
-        const userStr = localStorage.getItem('user');
-        if (!userStr) {
-            console.log('No user found in localStorage');
-            return;
-        }
-        const user = JSON.parse(userStr);
+        if (!user) return;
         console.log('Fetching notifications for User ID:', user.id);
 
         try {
@@ -54,25 +56,43 @@ const ReceiverDashboard = () => {
     };
 
     useEffect(() => {
-        fetchNotifications();
-        // Poll for notifications every 10 seconds for demo
-        const interval = setInterval(fetchNotifications, 10000);
-        return () => clearInterval(interval);
-    }, []);
+        if (user) {
+            fetchNotifications();
+            const interval = setInterval(fetchNotifications, 10000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
+
+    // Chat State
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [selectedDonationForChat, setSelectedDonationForChat] = useState(null);
+
+    const [myClaims, setMyClaims] = useState([]);
 
     const fetchFeed = async () => {
         try {
             const res = await axios.get('http://localhost:5000/api/donations');
-            // Filter for available items only if backend doesn't
             setFeed(res.data.filter(d => d.status === 'available'));
         } catch (err) {
             console.error(err);
         }
     };
 
+    const fetchMyClaims = async () => {
+        if (!user) return;
+        try {
+            const res = await axios.get(`http://localhost:5000/api/donations/receiver/${user.id}`);
+            // Show only active claims (not completed ones if desired, or all)
+            setMyClaims(res.data.filter(d => d.status !== 'delivered' && d.status !== 'cancelled'));
+        } catch (err) {
+            console.error("Failed to fetch claims", err);
+        }
+    };
+
     useEffect(() => {
         fetchFeed();
-    }, []);
+        if (user) fetchMyClaims();
+    }, [user]);
 
     const handleRequest = async (e) => {
         e.preventDefault();
@@ -119,6 +139,7 @@ const ReceiverDashboard = () => {
             });
 
             fetchFeed();
+            fetchMyClaims();
             setClaimedItem(confirmingDonation); // Show success details
             setConfirmingDonation(null); // Close modal
             alert(needsDelivery ? "Claimed! A volunteer will be notified." : "Claimed! Please collect it from the donor.");
@@ -126,6 +147,11 @@ const ReceiverDashboard = () => {
             console.error(err);
             alert(err.response?.data?.error || 'Failed to claim food.');
         }
+    };
+
+    const handleOpenChat = (item) => {
+        setSelectedDonationForChat(item);
+        setIsChatOpen(true);
     };
 
     const navigate = useNavigate();
@@ -203,6 +229,60 @@ const ReceiverDashboard = () => {
                         </div>
                         <input type="text" className="focus:ring-brand-green focus:border-brand-green block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 shadow-sm border" placeholder="Search for food nearby..." />
                     </div>
+
+                    {/* My Active Claims Section */}
+                    {myClaims.length > 0 && (
+                        <div className="mb-8">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">My Active Orders</h2>
+                            <div className="space-y-4">
+                                {myClaims.map((item) => (
+                                    <div key={item.id} className="bg-white rounded-lg shadow-sm border border-brand-green p-4 flex flex-col sm:flex-row gap-4 relative overflow-hidden">
+                                        <div className={`absolute top-0 right-0 px-3 py-1 text-xs font-bold uppercase rounded-bl-lg
+                                            ${item.status === 'in_transit' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                            {item.status === 'claimed' ? 'Waiting Pickup' : item.status === 'in_transit' ? 'On the Way' : item.status}
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold text-gray-900">{item.food_type}</h3>
+                                            <p className="text-sm text-gray-500">{item.quantity} Servings</p>
+
+                                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {/* Donor Info */}
+                                                <div className="text-sm">
+                                                    <p className="text-xs text-gray-400 uppercase font-semibold">Pickup From</p>
+                                                    <p className="font-medium text-gray-800">{item.profiles?.name}</p>
+                                                    <p className="text-gray-500 flex items-center"><Phone className="h-3 w-3 mr-1" /> {item.profiles?.phone}</p>
+                                                    <p className="text-gray-400 text-xs mt-1">{item.location?.address}</p>
+                                                </div>
+
+                                                {/* Volunteer Info (if assigned) */}
+                                                {item.volunteer && (
+                                                    <div className="text-sm bg-blue-50 p-2 rounded">
+                                                        <p className="text-xs text-blue-800 uppercase font-semibold">Delivery By</p>
+                                                        <p className="font-medium text-gray-800">{item.volunteer.name}</p>
+                                                        <p className="text-blue-600 flex items-center"><Phone className="h-3 w-3 mr-1" /> {item.volunteer.phone}</p>
+                                                        <p className="text-blue-600 flex items-center"><Phone className="h-3 w-3 mr-1" /> {item.volunteer.phone}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Chat Button for Receiver */}
+                                                {(item.volunteer_id) && (
+                                                    <div className="mt-2">
+                                                        <button
+                                                            onClick={() => handleOpenChat(item)}
+                                                            className="w-full flex items-center justify-center px-3 py-2 bg-indigo-100 text-indigo-700 text-sm font-bold rounded hover:bg-indigo-200 transition-colors shadow-sm"
+                                                        >
+                                                            <MessageCircle className="w-4 h-4 mr-2" /> Chat with {item.volunteer?.name || 'Deliverer'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <h2 className="text-lg font-medium text-gray-900 mb-4 flex justify-between">
                         Available Near You
@@ -396,6 +476,18 @@ const ReceiverDashboard = () => {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {/* Chat Modal */}
+            {selectedDonationForChat && (
+                <ChatModal
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    donationId={selectedDonationForChat.id}
+                    currentUserId={user?.id}
+                    receiverId={selectedDonationForChat.volunteer_id} // Receiver talks to Volunteer (who might be Donor)
+                    title={`Chat with ${selectedDonationForChat.volunteer?.name || 'Deliverer'}`}
+                />
             )}
         </div>
     );

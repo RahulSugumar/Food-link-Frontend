@@ -1,11 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import DonorDashboard from './pages/DonorDashboard';
 import ReceiverDashboard from './pages/ReceiverDashboard';
 import VolunteerDashboard from './pages/VolunteerDashboard';
 import ProfilePage from './pages/ProfilePage';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   return (
@@ -17,9 +18,11 @@ function App() {
         <Route path="/receiver-dashboard" element={<ReceiverDashboard />} />
         <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
     </Router>
   );
 }
 
 export default App;
+

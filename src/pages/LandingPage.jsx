@@ -19,6 +19,9 @@ const LandingPage = () => {
                         <div className="hidden md:flex space-x-8">
                             <a href="#about" className="text-gray-600 hover:text-brand-orange">About Us</a>
                             <a href="#locations" className="text-gray-600 hover:text-brand-orange">Fridge Locations</a>
+                            <button onClick={() => navigate('/leaderboard')} className="text-gray-600 hover:text-brand-orange font-medium flex items-center">
+                                Leaderboard 🏆
+                            </button>
                         </div>
                         <button
                             onClick={() => navigate('/auth')}

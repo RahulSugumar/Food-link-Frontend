@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw, ArrowLeft, Trash2 } from 'lucide-react';
+import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw, ArrowLeft, Trash2, MessageCircle } from 'lucide-react';
 import LocationPicker from '../components/LocationPicker'; // Import component
+import ChatModal from '../components/ChatModal';
 
 const DonorDashboard = () => {
     const [showDonateForm, setShowDonateForm] = useState(false);
@@ -11,9 +12,19 @@ const DonorDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null); // Map state
 
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const u = localStorage.getItem('user');
+        if (u) setUser(JSON.parse(u));
+    }, []);
+
+    // Chat State
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [selectedDonationForChat, setSelectedDonationForChat] = useState(null);
+
     const fetchDonations = async () => {
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user) return; // Wait for user state
 
         try {
             // Fetch Community Recent
@@ -23,7 +34,8 @@ const DonorDashboard = () => {
             // Fetch My Donations (if logged in)
             if (user && user.id) {
                 const myRes = await axios.get(`http://localhost:5000/api/donations/donor/${user.id}`);
-                setMyDonations(myRes.data);
+                const sorted = myRes.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                setMyDonations(sorted);
             }
         } catch (err) {
             console.error(err);
@@ -31,8 +43,8 @@ const DonorDashboard = () => {
     };
 
     useEffect(() => {
-        fetchDonations();
-    }, []);
+        if (user) fetchDonations(); // Fetch when user is set
+    }, [user]);
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this donation?")) {
@@ -53,8 +65,8 @@ const DonorDashboard = () => {
         e.preventDefault();
         setLoading(true);
         const formData = new FormData(e.target);
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
+        // const userStr = localStorage.getItem('user'); // Removed, now using state
+        // const user = userStr ? JSON.parse(userStr) : null; // Removed, now using state
         const addressInput = formData.get('location');
 
         if (!user) {
@@ -90,6 +102,41 @@ const DonorDashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSelfDeliver = async (id) => {
+        if (!window.confirm("Are you sure you want to deliver this yourself?")) return;
+        // const userStr = localStorage.getItem('user'); // Removed, now using state
+        // const user = userStr ? JSON.parse(userStr) : null; // Removed, now using state
+
+        try {
+            await axios.put(`http://localhost:5000/api/donations/${id}/accept`, {
+                volunteer_id: user.id
+            });
+            alert("Great! You are now delivering this donation.");
+            fetchDonations();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to assign delivery.");
+        }
+    };
+
+    const handleCompleteDelivery = async (id) => {
+        if (!window.confirm("Has the food been delivered successfully?")) return;
+        try {
+            // Re-use the existing endpoint
+            await axios.put(`http://localhost:5000/api/donations/${id}/deliver`);
+            alert("Delivery confirmed! Points awarded.");
+            fetchDonations();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to complete delivery.");
+        }
+    };
+
+    const handleOpenChat = (donation) => {
+        setSelectedDonationForChat(donation);
+        setIsChatOpen(true);
     };
 
     const navigate = useNavigate();
@@ -184,37 +231,116 @@ const DonorDashboard = () => {
                             {myDonations.length === 0 ? (
                                 <div className="p-6 text-center text-gray-500">You haven't made any donations yet.</div>
                             ) : (
-                                <ul role="list" className="divide-y divide-gray-200">
-                                    {myDonations.map((donation) => (
-                                        <li key={donation.id}>
-                                            <div className="px-4 py-4 sm:px-6">
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-sm font-medium text-brand-orange truncate">{donation.food_type}</p>
-                                                    <div className="ml-2 flex-shrink-0 flex">
-                                                        <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${donation.status === 'reserved' ? 'bg-green-100 text-green-800' :
-                                                            donation.status === 'completed' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'
-                                                            }`}>
-                                                            {donation.status}
-                                                        </p>
+                                <div className="space-y-4">
+                                    {myDonations.map((item) => {
+                                        // const userStr = localStorage.getItem('user'); // Removed, now using state
+                                        // const user = userStr ? JSON.parse(userStr) : null; // Removed, now using state
+                                        const IsDonorSelfDelivering = (d) => d.volunteer_id === user?.id;
+
+                                        return (
+                                            <div key={item.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors flex justify-between items-center bg-white shadow-sm">
+                                                <div>
+                                                    <p className="font-bold text-gray-800">{item.food_type}</p>
+                                                    <div className="flex items-center space-x-2 mt-2">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize
+                                                        ${item.status === 'available' ? 'bg-green-100 text-green-800' :
+                                                                item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-gray-100 text-gray-800'}`}>
+                                                            {item.status}
+                                                        </span>
+                                                        {item.status === 'claimed' && item.delivery_needed && (
+                                                            <span className="text-xs text-red-500 font-bold flex items-center">
+                                                                <MapPin className="h-3 w-3 mr-1" /> Delivery Needed
+                                                            </span>
+                                                        )}
                                                     </div>
+                                                    <p className="text-xs text-gray-500 mt-2">
+                                                        Qty: {item.quantity} • {new Date(item.created_at).toLocaleDateString()}
+                                                    </p>
                                                 </div>
-                                                <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
-                                                    <span>Quantity: {donation.quantity} • Posted: {new Date(donation.created_at).toLocaleDateString()}</span>
-                                                    <button
-                                                        onClick={() => handleDelete(donation.id)}
-                                                        className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
-                                                        title="Delete Donation"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+
+                                                <div className="flex flex-col space-y-2 items-end">
+                                                    {item.status === 'available' && (
+                                                        <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50">
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+
+                                                    {/* Donor Self-Delivery Button */}
+                                                    {item.status === 'claimed' && item.delivery_needed && (
+                                                        <button
+                                                            onClick={() => handleSelfDeliver(item.id)}
+                                                            className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full hover:bg-orange-700 transition-colors shadow-sm"
+                                                        >
+                                                            I will Deliver
+                                                        </button>
+                                                    )}
+
+                                                    {/* Donor Mark as Delivered */}
+                                                    {item.status === 'in_transit' && (
+                                                        <button
+                                                            onClick={() => handleCompleteDelivery(item.id)}
+                                                            className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full hover:bg-green-700 transition-colors shadow-sm flex items-center"
+                                                        >
+                                                            <CheckCircle className="w-3 h-3 mr-1" /> Mark Delivered
+                                                        </button>
+                                                    )}
+
+                                                    {item.status === 'delivered' && (
+                                                        <span className="text-xs text-green-600 font-bold border border-green-200 px-2 py-1 rounded bg-green-50 flex items-center">
+                                                            <CheckCircle className="w-3 h-3 mr-1" /> Delivered
+                                                        </span>
+                                                    )}
+
+                                                    {/* Chat Button (Only if Donor is delivering OR Receiver is picking up) */}
+                                                    {(item.status === 'claimed' || item.status === 'in_transit') &&
+                                                        (!item.delivery_needed || IsDonorSelfDelivering(item)) && (
+                                                            <button
+                                                                onClick={() => handleOpenChat(item)}
+                                                                className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full hover:bg-indigo-200 transition-colors shadow-sm flex items-center"
+                                                            >
+                                                                <MessageCircle className="w-3 h-3 mr-1" /> Chat
+                                                            </button>
+                                                        )}
                                                 </div>
                                             </div>
-                                        </li>
-                                    ))}
-                                </ul>
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
                     </div>
+                    {/* Chat Modal */}
+                    {selectedDonationForChat && (
+                        <ChatModal
+                            isOpen={isChatOpen}
+                            onClose={() => setIsChatOpen(false)}
+                            donationId={selectedDonationForChat.id}
+                            currentUserId={user?.id}
+                            receiverId={(() => {
+                                // Strict Participant Logic
+                                if (selectedDonationForChat.volunteer_id) {
+                                    // If Volunteer exists...
+                                    if (selectedDonationForChat.volunteer_id === user?.id) {
+                                        // I AM the volunteer (Self-Delivery) -> Talk to Receiver
+                                        return selectedDonationForChat.receiver_id;
+                                    } else {
+                                        // I am Donor, Volunteer is someone else -> Talk to Volunteer (NOT Receiver)
+                                        // Wait, simple logic: Donor Chat Button only shows if Donor IS Volunteer.
+                                        // Logic in JSX handles visibility.
+                                        // But if I am just a Donor watching, and I click chat (which logic hides?), this shouldn't happen.
+                                        // If I am Self-Deliverer: Receiver is my partner.
+                                        return selectedDonationForChat.receiver_id;
+                                    }
+                                } else {
+                                    // No volunteer yet. Chat with Receiver?
+                                    // Donor -> Receiver (Direct pickup)
+                                    return selectedDonationForChat.receiver_id;
+                                }
+                            })()}
+                            title={`Chat with ${selectedDonationForChat.receiver?.name || 'Receiver'}`}
+                        />
+                    )}
 
                     {/* Section 2: Community Activity */}
                     <div>
@@ -257,8 +383,8 @@ const DonorDashboard = () => {
                     </div>
 
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 
