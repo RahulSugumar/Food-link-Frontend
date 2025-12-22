@@ -117,10 +117,10 @@ const LocationPicker = ({ onLocationSelect, initialLat = 27.1751, initialLng = 7
     };
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             {/* Search Bar */}
-            <div className="flex gap-2 relative z-[1000]"> {/* High z-index for dropdown */}
-                <div className="flex-1 relative rounded-md shadow-sm">
+            <div className="flex gap-2 relative z-[1000]">
+                <div className="flex-1 relative">
                     <input
                         type="text"
                         value={searchQuery}
@@ -131,30 +131,28 @@ const LocationPicker = ({ onLocationSelect, initialLat = 27.1751, initialLng = 7
                                 handleSearch(e);
                             }
                         }}
-                        placeholder="Search address (e.g. MG Road, Bangalore)"
-                        className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-3 sm:text-sm border-gray-300 rounded-md py-2 border"
+                        placeholder="Search your address..."
+                        className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange2/20 focus:border-brand-orange2 transition-all bg-gray-50/50 focus:bg-white"
                     />
                     <button
                         type="button"
                         onClick={handleSearch}
-                        className="absolute inset-y-0 right-0 px-3 flex items-center bg-gray-50 border-l border-gray-300 rounded-r-md hover:bg-gray-100"
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-brand-orange2 transition-colors"
                     >
-                        <Search className="h-4 w-4 text-gray-500" />
+                        <Search className="h-4 w-4" />
                     </button>
 
                     {/* Suggestions Dropdown */}
                     {suggestions.length > 0 && (
-                        <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                        <ul className="absolute z-50 mt-1 w-full bg-white shadow-xl max-h-48 rounded-xl py-1 text-sm ring-1 ring-gray-100 overflow-auto">
                             {suggestions.map((suggestion, index) => (
                                 <li
                                     key={index}
                                     onClick={() => handleSelectSuggestion(suggestion)}
-                                    className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-orange-50 text-gray-900 border-b last:border-b-0 border-gray-100"
+                                    className="cursor-pointer py-2 px-3 hover:bg-orange-50 text-gray-700 border-b last:border-b-0 border-gray-50 flex items-center gap-2"
                                 >
-                                    <div className="flex items-center">
-                                        <MapPin className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                                        <span className="block truncate">{suggestion.display_name}</span>
-                                    </div>
+                                    <MapPin className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                                    <span className="truncate text-xs">{suggestion.display_name}</span>
                                 </li>
                             ))}
                         </ul>
@@ -163,19 +161,21 @@ const LocationPicker = ({ onLocationSelect, initialLat = 27.1751, initialLng = 7
                 <button
                     type="button"
                     onClick={handleLocateMe}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange"
+                    className="px-3 py-2 border border-gray-200 rounded-xl text-gray-500 bg-white hover:bg-gray-50 hover:text-brand-orange2 transition-all"
+                    title="Use my location"
                 >
                     <Navigation className="h-4 w-4" />
                 </button>
             </div>
 
             {/* Selected Address Display */}
-            <div className="flex items-start space-x-2 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100">
-                <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                <span className="break-words">{address}</span>
+            <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
+                <MapPin className="h-3 w-3 flex-shrink-0 text-brand-orange2" />
+                <span className="truncate">{address}</span>
             </div>
 
-            <div className="h-64 w-full rounded-lg overflow-hidden shadow-inner border border-gray-300 relative z-0">
+            {/* Compact Map */}
+            <div className="h-32 w-full rounded-xl overflow-hidden border border-gray-200 relative z-0">
                 <MapContainer
                     center={position}
                     zoom={13}
@@ -183,7 +183,7 @@ const LocationPicker = ({ onLocationSelect, initialLat = 27.1751, initialLng = 7
                     ref={setMap}
                 >
                     <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <Marker position={position} />

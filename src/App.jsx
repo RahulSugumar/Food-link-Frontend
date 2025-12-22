@@ -8,10 +8,15 @@ import VolunteerDashboard from './pages/VolunteerDashboard';
 import ProfilePage from './pages/ProfilePage';
 import Leaderboard from './pages/Leaderboard';
 
-function App() {
+import { AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <Router>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/donor-dashboard" element={<DonorDashboard />} />
@@ -20,6 +25,14 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AnimatedRoutes />
     </Router>
   );
 }

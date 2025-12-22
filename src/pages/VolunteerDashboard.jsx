@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { MapPin, Navigation, Package, Phone, CheckCircle, RefreshCcw, User, ArrowLeft, MessageCircle } from 'lucide-react';
+import { MapPin, Navigation, Package, Phone, CheckCircle, RefreshCcw, User, ArrowLeft, MessageCircle, Truck, TrendingUp, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import ChatModal from '../components/ChatModal';
 
 const VolunteerDashboard = () => {
@@ -74,24 +75,102 @@ const VolunteerDashboard = () => {
     const myTasks = tasks.filter(t => t.status === 'in_transit');
     const pastTasks = tasks.filter(t => t.status === 'delivered');
 
+    // Stats calculation
+    const totalDeliveries = pastTasks.length;
+    const activeDeliveries = myTasks.length;
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Navbar */}
-            <div className="bg-white shadow-sm p-4 sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700">
-                            <ArrowLeft className="h-6 w-6" />
-                        </button>
-                        <h1 className="text-xl font-bold text-brand-blue">Volunteer Portal</h1>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50"
+        >
+            {/* Modern Navbar */}
+            <div className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-4">
+                            <button onClick={() => navigate('/')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all">
+                                <ArrowLeft className="h-5 w-5" />
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl">
+                                    <Truck className="h-5 w-5 text-white" />
+                                </div>
+                                <h1 className="text-xl font-black text-gray-900">Volunteer Portal</h1>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-brand-blue px-4 py-2 rounded-full text-sm font-bold">
+                                <TrendingUp className="h-4 w-4" />
+                                {totalDeliveries} Deliveries
+                            </div>
+                            <button
+                                onClick={() => navigate('/profile')}
+                                className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center hover:shadow-lg transition-all text-white font-bold"
+                            >
+                                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                            </button>
+                        </div>
                     </div>
-                    <button onClick={() => navigate('/profile')} className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center hover:ring-2 hover:ring-brand-blue transition-all" title="My Profile">
-                        <span className="text-xs font-bold text-gray-600">ME</span>
-                    </button>
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Stats Cards */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-yellow-100 p-2 rounded-xl">
+                                <Clock className="h-5 w-5 text-yellow-600" />
+                            </div>
+                            <div>
+                                <p className="text-2xl font-black text-gray-900">{availableTasks.length}</p>
+                                <p className="text-xs text-gray-500">Available</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-blue-100 p-2 rounded-xl">
+                                <Truck className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-2xl font-black text-gray-900">{activeDeliveries}</p>
+                                <p className="text-xs text-gray-500">In Transit</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-green-100 p-2 rounded-xl">
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-2xl font-black text-gray-900">{totalDeliveries}</p>
+                                <p className="text-xs text-gray-500">Completed</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
                 {/* Tabs */}
                 <div className="flex space-x-4 mb-6 border-b border-gray-200 pb-1">
                     <button
@@ -196,7 +275,7 @@ const VolunteerDashboard = () => {
                     />
                 )
             }
-        </div >
+        </motion.div>
     );
 };
 

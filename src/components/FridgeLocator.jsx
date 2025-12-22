@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { Search, MapPin, Navigation, Info } from 'lucide-react';
+import { Search, MapPin, Navigation, Info, Clock, Thermometer } from 'lucide-react';
 import axios from 'axios';
 import L from 'leaflet';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Fix icons
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -30,7 +31,7 @@ const fridgeIcon = new L.Icon({
 const MapFlyTo = ({ position }) => {
     const map = useMap();
     useEffect(() => {
-        if (position) map.flyTo(position, 13);
+        if (position) map.flyTo(position, 13, { duration: 3 }); // Slower animation (3 seconds)
     }, [position, map]);
     return null;
 };
@@ -40,6 +41,7 @@ const FridgeLocator = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [fridges, setFridges] = useState([]);
+    const [selectedFridgeId, setSelectedFridgeId] = useState(null);
 
     // Fetch Fridges from Backend
     useEffect(() => {
@@ -88,7 +90,6 @@ const FridgeLocator = () => {
                 (pos) => {
                     const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                     setCenter(newPos);
-                    // Reverse geocode to show name in search bar
                     axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newPos.lat}&lon=${newPos.lng}`)
                         .then(res => {
                             if (res.data && res.data.display_name) setSearchQuery(res.data.display_name);
@@ -102,65 +103,98 @@ const FridgeLocator = () => {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col md:flex-row h-[600px]">
+        <div className="flex flex-col md:flex-row h-[650px] bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
             {/* Sidebar List */}
-            <div className="w-full md:w-1/3 bg-gray-50 p-4 overflow-y-auto border-r border-gray-200">
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <MapPin className="mr-2 text-brand-orange" /> Nearby Fridges
-                </h3>
+            <div className="w-full md:w-1/3 bg-gray-50 flex flex-col relative z-20">
+                <div className="p-6 bg-white shadow-sm z-30">
+                    <h3 className="text-2xl font-black text-gray-800 mb-4 flex items-center">
+                        <MapPin className="mr-2 text-brand-orange fill-orange-100" /> Locally Available
+                    </h3>
 
-                {/* Search */}
-                <div className="relative mb-6 z-50">
-                    <div className="flex shadow-sm rounded-md">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                            placeholder="Search location..."
-                            className="flex-1 block w-full rounded-none rounded-l-md border-gray-300 focus:ring-brand-orange focus:border-brand-orange sm:text-sm p-2 bg-white"
-                        />
-                        <button onClick={handleSearch} className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-100 text-gray-500 text-sm hover:bg-gray-200">
-                            <Search className="h-4 w-4" />
+                    {/* Search */}
+                    <div className="relative">
+                        <div className="flex bg-gray-100 rounded-xl overflow-hidden transition-shadow focus-within:shadow-md focus-within:ring-2 focus-within:ring-brand-orange/20">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+                                placeholder="Search area..."
+                                className="flex-1 bg-transparent border-none text-gray-700 py-3 px-4 focus:ring-0 placeholder-gray-400"
+                            />
+                            <button onClick={handleSearch} className="px-4 text-gray-400 hover:text-brand-orange transition-colors">
+                                <Search size={20} />
+                            </button>
+                        </div>
+
+                        {/* Suggestions Dropdown */}
+                        <AnimatePresence>
+                            {suggestions.length > 0 && (
+                                <motion.ul
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto z-50"
+                                >
+                                    {suggestions.map((s, i) => (
+                                        <li key={i} onClick={() => handleSelectSuggestion(s)} className="cursor-pointer py-3 px-4 hover:bg-orange-50 border-b last:border-0 text-sm text-gray-600 truncate transition-colors">
+                                            {s.display_name}
+                                        </li>
+                                    ))}
+                                </motion.ul>
+                            )}
+                        </AnimatePresence>
+
+                        <button onClick={handleLocateMe} className="mt-3 text-sm text-brand-orange font-semibold flex items-center hover:text-orange-600 transition-colors">
+                            <Navigation className="h-4 w-4 mr-1" /> Use my current location
                         </button>
                     </div>
-                    {/* Dropdown */}
-                    {suggestions.length > 0 && (
-                        <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-200">
-                            {suggestions.map((s, i) => (
-                                <li key={i} onClick={() => handleSelectSuggestion(s)} className="cursor-pointer py-2 px-4 hover:bg-orange-50 border-b last:border-0 truncate">
-                                    {s.display_name}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <button onClick={handleLocateMe} className="mt-2 text-sm text-brand-orange flex items-center hover:underline">
-                        <Navigation className="h-3 w-3 mr-1" /> Use my location
-                    </button>
                 </div>
 
                 {/* List */}
-                <div className="space-y-4">
-                    {fridges.map(fridge => (
-                        <div key={fridge.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                            onClick={() => {
-                                if (fridge.location && fridge.location.lat && fridge.location.lng) {
-                                    setCenter({ lat: fridge.location.lat, lng: fridge.location.lng });
-                                }
-                            }}>
-                            <h4 className="font-semibold text-gray-900">{fridge.name}</h4>
-                            <p className="text-sm text-gray-500 mt-1">{fridge.location?.address || "Address not available"}</p>
-                            <div className="mt-2 flex items-center justify-between text-xs">
-                                <span className="bg-green-100 text-brand-green px-2 py-1 rounded-full">{fridge.status === 'active' ? 'Open 24/7' : 'Maintenence'}</span>
-                                <span className="text-gray-400">Capacity: {fridge.capacity}</span>
-                            </div>
-                        </div>
-                    ))}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                    {fridges.map((fridge) => {
+                        const isSelected = selectedFridgeId === fridge.id;
+                        return (
+                            <motion.div
+                                key={fridge.id}
+                                layoutId={fridge.id}
+                                onClick={() => {
+                                    if (fridge.location?.lat) {
+                                        setCenter({ lat: fridge.location.lat, lng: fridge.location.lng });
+                                        setSelectedFridgeId(fridge.id);
+                                    }
+                                }}
+                                className={`p-4 rounded-xl border transition-all cursor-pointer ${isSelected
+                                    ? 'bg-orange-50 border-brand-orange shadow-md scale-[1.02]'
+                                    : 'bg-white border-gray-100 hover:border-brand-orange/30 hover:shadow-sm'
+                                    }`}
+                            >
+                                <div className="flex justify-between items-start">
+                                    <h4 className={`font-bold text-lg ${isSelected ? 'text-brand-orange' : 'text-gray-800'}`}>
+                                        {fridge.name}
+                                    </h4>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${fridge.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                        {fridge.status === 'active' ? 'Active' : 'Maintenance'}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1 flex items-start">
+                                    <MapPin size={14} className="mr-1 mt-0.5 shrink-0" />
+                                    {fridge.location?.address || "Address not available"}
+                                </p>
+                                <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
+                                    <span className="flex items-center"><Clock size={12} className="mr-1" /> 24/7 Access</span>
+                                    <span className="flex items-center"><Thermometer size={12} className="mr-1" /> {fridge.capacity || 'Standard'}</span>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* Map */}
-            <div className="w-full md:w-2/3 relative z-0">
+            <div className="w-full md:w-2/3 relative h-full bg-gray-200">
                 <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
@@ -168,19 +202,39 @@ const FridgeLocator = () => {
                     />
                     <MapFlyTo position={center} />
 
-                    {/* User Marker */}
                     <Marker position={center}>
-                        <Popup>You are here</Popup>
+                        <Popup>
+                            <div className="text-center">
+                                <span className="font-bold text-brand-orange">You are here</span>
+                            </div>
+                        </Popup>
                     </Marker>
 
-                    {/* Fridge Markers */}
                     {fridges.map(fridge => (
-                        fridge.location && fridge.location.lat && fridge.location.lng ? (
-                            <Marker key={fridge.id} position={[fridge.location.lat, fridge.location.lng]} icon={fridgeIcon}>
-                                <Popup>
-                                    <b>{fridge.name}</b><br />
-                                    {fridge.location.address}<br />
-                                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${fridge.location.lat},${fridge.location.lng}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Get Directions</a>
+                        fridge.location?.lat ? (
+                            <Marker
+                                key={fridge.id}
+                                position={[fridge.location.lat, fridge.location.lng]}
+                                icon={fridgeIcon}
+                                eventHandlers={{
+                                    click: () => setSelectedFridgeId(fridge.id),
+                                }}
+                            >
+                                <Popup className="custom-popup">
+                                    <div className="p-2 min-w-[200px]">
+                                        <b className="text-lg text-gray-800">{fridge.name}</b><br />
+                                        <span className="text-sm text-gray-500">{fridge.location.address}</span><br />
+                                        <div className="mt-2 flex gap-2">
+                                            <a
+                                                href={`https://www.google.com/maps/dir/?api=1&destination=${fridge.location.lat},${fridge.location.lng}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex-1 bg-brand-blue text-white text-center py-1 px-3 rounded-lg text-xs font-bold hover:bg-blue-600 transition-colors"
+                                            >
+                                                Navigate
+                                            </a>
+                                        </div>
+                                    </div>
                                 </Popup>
                             </Marker>
                         ) : null
