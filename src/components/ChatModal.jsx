@@ -17,7 +17,7 @@ const ChatModal = ({ isOpen, onClose, donationId, currentUserId, receiverId, tit
         }
         try {
             console.log(`[Chat] Fetching for Donation: ${donationId}`);
-            const res = await axios.get(`http://localhost:5000/api/chat/${donationId}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/chat/${donationId}`);
             console.log(`[Chat] Messages Fetched:`, res.data.length, res.data);
             setMessages(res.data);
         } catch (err) {
@@ -53,7 +53,7 @@ const ChatModal = ({ isOpen, onClose, donationId, currentUserId, receiverId, tit
         if (!newMessage.trim()) return;
 
         try {
-            await axios.post('http://localhost:5000/api/chat/send', {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/chat/send`, {
                 sender_id: currentUserId,
                 receiver_id: receiverId,
                 donation_id: donationId,
@@ -99,8 +99,8 @@ const ChatModal = ({ isOpen, onClose, donationId, currentUserId, receiverId, tit
                                             {isMe ? 'You' : senderName}
                                         </span>
                                         <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe
-                                                ? 'bg-blue-600 text-white rounded-br-none'
-                                                : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+                                            ? 'bg-blue-600 text-white rounded-br-none'
+                                            : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
                                             }`}>
                                             <p className="text-sm leading-relaxed">{msg.message}</p>
                                         </div>

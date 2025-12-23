@@ -17,7 +17,7 @@ const Leaderboard = () => {
 
     const fetchLeaderboard = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/donations/leaderboard');
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/leaderboard`);
             setVolunteers(res.data.volunteers || []);
             setDonors(res.data.donors || []);
             setLoading(false);
@@ -193,8 +193,8 @@ const Leaderboard = () => {
                     <button
                         onClick={() => setActiveTab('volunteers')}
                         className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'volunteers'
-                                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         <TrendingUp className="h-4 w-4" />
@@ -203,8 +203,8 @@ const Leaderboard = () => {
                     <button
                         onClick={() => setActiveTab('donors')}
                         className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'donors'
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         <Star className="h-4 w-4" />

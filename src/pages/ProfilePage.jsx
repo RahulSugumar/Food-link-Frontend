@@ -34,7 +34,7 @@ const ProfilePage = () => {
 
         try {
             // Fetch latest profile data
-            const res = await axios.get(`http://localhost:5000/api/auth/profile/${localUser.id}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/profile/${localUser.id}`);
             const profile = res.data;
             setUser(profile);
             setFormData({
@@ -45,10 +45,10 @@ const ProfilePage = () => {
 
             // Fetch History based on role
             if (profile.role === 'donor') {
-                const historyRes = await axios.get(`http://localhost:5000/api/donations/donor/${localUser.id}`);
+                const historyRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/donor/${localUser.id}`);
                 setHistory(historyRes.data);
             } else if (profile.role === 'receiver') {
-                const historyRes = await axios.get(`http://localhost:5000/api/donations/receiver/${localUser.id}`);
+                const historyRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/receiver/${localUser.id}`);
                 setHistory(historyRes.data);
             }
 
@@ -62,7 +62,7 @@ const ProfilePage = () => {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.put(`http://localhost:5000/api/auth/profile/${user.id}`, formData);
+            const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/auth/profile/${user.id}`, formData);
             setUser(res.data.user);
             setIsEditing(false);
 

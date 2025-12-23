@@ -29,12 +29,12 @@ const DonorDashboard = () => {
 
         try {
             // Fetch Community Recent
-            const recentRes = await axios.get('http://localhost:5000/api/donations/recent');
+            const recentRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/recent`);
             setRecentDonations(recentRes.data);
 
             // Fetch My Donations (if logged in)
             if (user && user.id) {
-                const myRes = await axios.get(`http://localhost:5000/api/donations/donor/${user.id}`);
+                const myRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/donor/${user.id}`);
                 const sorted = myRes.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 setMyDonations(sorted);
             }
@@ -50,7 +50,7 @@ const DonorDashboard = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this donation?")) {
             try {
-                await axios.delete(`http://localhost:5000/api/donations/${id}`);
+                await axios.delete(`${import.meta.env.VITE_API_URL}/api/donations/${id}`);
                 setMyDonations(prev => prev.filter(d => d.id !== id));
                 // Also refresh recent list as it might be there
                 fetchDonations();
@@ -93,7 +93,7 @@ const DonorDashboard = () => {
         };
 
         try {
-            await axios.post('http://localhost:5000/api/donations', data);
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/donations`, data);
             setShowDonateForm(false);
             fetchDonations();
             alert('Donation posted successfully!');
@@ -111,7 +111,7 @@ const DonorDashboard = () => {
         // const user = userStr ? JSON.parse(userStr) : null; // Removed, now using state
 
         try {
-            await axios.put(`http://localhost:5000/api/donations/${id}/accept`, {
+            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${id}/accept`, {
                 volunteer_id: user.id
             });
             alert("Great! You are now delivering this donation.");
@@ -126,7 +126,7 @@ const DonorDashboard = () => {
         if (!window.confirm("Has the food been delivered successfully?")) return;
         try {
             // Re-use the existing endpoint
-            await axios.put(`http://localhost:5000/api/donations/${id}/deliver`);
+            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${id}/deliver`);
             alert("Delivery confirmed! Points awarded.");
             fetchDonations();
         } catch (err) {

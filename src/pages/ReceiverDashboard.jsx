@@ -43,7 +43,7 @@ const ReceiverDashboard = () => {
         console.log('Fetching notifications for User ID:', user.id);
 
         try {
-            const res = await axios.get(`http://localhost:5000/api/notifications/${user.id}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications/${user.id}`);
             console.log('API Response:', res.status, res.data);
             if (Array.isArray(res.data)) {
                 console.log('Notification Count:', res.data.length);
@@ -72,7 +72,7 @@ const ReceiverDashboard = () => {
 
     const fetchFeed = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/donations');
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations`);
             setFeed(res.data.filter(d => d.status === 'available'));
         } catch (err) {
             console.error(err);
@@ -82,7 +82,7 @@ const ReceiverDashboard = () => {
     const fetchMyClaims = async () => {
         if (!user) return;
         try {
-            const res = await axios.get(`http://localhost:5000/api/donations/receiver/${user.id}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/receiver/${user.id}`);
             // Show only active claims (not completed ones if desired, or all)
             setMyClaims(res.data.filter(d => d.status !== 'delivered' && d.status !== 'cancelled'));
         } catch (err) {
@@ -101,7 +101,7 @@ const ReceiverDashboard = () => {
         const formData = new FormData(e.target);
         // Simple logic to post request
         try {
-            await axios.post('http://localhost:5000/api/requests', {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/requests`, {
                 food_item: formData.get('item'),
                 quantity: 1, // Defaulting for simple demo
                 location: { address: formData.get('location') },
@@ -134,7 +134,7 @@ const ReceiverDashboard = () => {
         if (!user || !confirmingDonation) return;
 
         try {
-            await axios.put(`http://localhost:5000/api/donations/${confirmingDonation.id}/claim`, {
+            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${confirmingDonation.id}/claim`, {
                 receiver_id: user.id,
                 delivery_needed: needsDelivery
             });
@@ -211,7 +211,7 @@ const ReceiverDashboard = () => {
                                                         onClick={async () => {
                                                             try {
                                                                 setNotifications(prev => prev.filter(n => n.id !== notif.id));
-                                                                await axios.put(`http://localhost:5000/api/notifications/${notif.id}/read`);
+                                                                await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/${notif.id}/read`);
                                                             } catch (err) {
                                                                 console.error('Failed to mark as read', err);
                                                             }

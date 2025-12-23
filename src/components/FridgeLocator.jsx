@@ -47,7 +47,7 @@ const FridgeLocator = () => {
     useEffect(() => {
         const fetchFridges = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/fridges');
+                const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/fridges`);
                 if (res.data) {
                     setFridges(res.data);
                 }
