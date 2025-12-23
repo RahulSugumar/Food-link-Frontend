@@ -374,7 +374,7 @@ const LandingPage = () => {
                         <SpotlightCard className="md:col-span-2 bg-white rounded-[2.5rem] p-10 border border-slate-200">
                             <div className="relative z-10 w-full h-full flex flex-col justify-between">
                                 <div>
-                                    <div className="bento-icon h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm text-brand-orange">
+                                    <div className="bento-icon h-16 w-16 bg-white rounded-2xl  flex items-center justify-center mb-8 shadow-sm text-brand-orange border border-slate-300 ">
                                         <MapPin className="w-8 h-8 animate-bounce" />
                                     </div>
                                     <h3 className="font-display text-3xl font-bold text-slate-900 mb-4">Live Discovery</h3>
@@ -419,7 +419,7 @@ const LandingPage = () => {
                         <SpotlightCard className="md:col-span-1 bg-white rounded-[2.5rem] p-10 border border-slate-100">
                             <div className="relative z-10 h-full flex flex-col justify-between">
                                 <div>
-                                    <div className="bento-icon h-16 w-16 bg-yellow-50 rounded-2xl flex items-center justify-center mb-6 text-yellow-500">
+                                    <div className="bento-icon h-16 w-16 bg-yellow-50 rounded-2xl flex items-center justify-center mb-6 text-yellow-500 border border-slate-300">
                                         <Award className="w-8 h-8 animate-sway" />
                                     </div>
                                     <h3 className="font-display text-2xl font-bold text-slate-900 mb-2">Impact Levels</h3>
