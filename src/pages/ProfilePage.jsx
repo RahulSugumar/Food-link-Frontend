@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, Phone, MapPin, ArrowLeft, History, Save, Edit2 } from 'lucide-react';
 import LocationPicker from '../components/LocationPicker';
+import { API_URL } from '../config';
 
 const ProfilePage = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ const ProfilePage = () => {
 
         try {
             // Fetch latest profile data
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/profile/${localUser.id}`);
+            const res = await axios.get(`${API_URL}/api/auth/profile/${localUser.id}`);
             const profile = res.data;
             setUser(profile);
             setFormData({
@@ -45,10 +46,10 @@ const ProfilePage = () => {
 
             // Fetch History based on role
             if (profile.role === 'donor') {
-                const historyRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/donor/${localUser.id}`);
+                const historyRes = await axios.get(`${API_URL}/api/donations/donor/${localUser.id}`);
                 setHistory(historyRes.data);
             } else if (profile.role === 'receiver') {
-                const historyRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/receiver/${localUser.id}`);
+                const historyRes = await axios.get(`${API_URL}/api/donations/receiver/${localUser.id}`);
                 setHistory(historyRes.data);
             }
 
@@ -62,7 +63,7 @@ const ProfilePage = () => {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/auth/profile/${user.id}`, formData);
+            const res = await axios.put(`${API_URL}/api/auth/profile/${user.id}`, formData);
             setUser(res.data.user);
             setIsEditing(false);
 

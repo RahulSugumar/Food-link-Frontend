@@ -5,6 +5,7 @@ import { Heart, User, ArrowLeft, Mail, Lock, Eye, EyeOff, Phone, Gift, Users, Ma
 import LocationPicker from '../components/LocationPicker';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { API_URL } from '../config';
 
 const AuthPage = () => {
     const navigate = useNavigate();
@@ -65,7 +66,7 @@ const AuthPage = () => {
                 location
             };
 
-        const endpoint = isLogin ? `${import.meta.env.VITE_API_URL}/api/auth/login` : `${import.meta.env.VITE_API_URL}/api/auth/register`;
+        const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
 
         try {
             const response = await axios.post(endpoint, payload);

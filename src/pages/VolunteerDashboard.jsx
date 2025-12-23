@@ -4,6 +4,7 @@ import axios from 'axios';
 import { MapPin, Navigation, Package, Phone, CheckCircle, RefreshCcw, User, ArrowLeft, MessageCircle, Truck, TrendingUp, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ChatModal from '../components/ChatModal';
+import { API_URL } from '../config';
 
 const VolunteerDashboard = () => {
     const navigate = useNavigate();
@@ -26,7 +27,7 @@ const VolunteerDashboard = () => {
         if (!user) return;
 
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/volunteer/tasks/${user.id}`);
+            const res = await axios.get(`${API_URL}/api/donations/volunteer/tasks/${user.id}`);
             setTasks(res.data);
         } catch (err) {
             console.error(err);
@@ -41,7 +42,7 @@ const VolunteerDashboard = () => {
         if (!user) return;
 
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${id}/accept`, { volunteer_id: user.id });
+            await axios.put(`${API_URL}/api/donations/${id}/accept`, { volunteer_id: user.id });
             alert("Task accepted successfully!");
             fetchTasks(); // Refresh tasks to update UI
         } catch (err) {
@@ -53,7 +54,7 @@ const VolunteerDashboard = () => {
     const handleDeliver = async (id) => {
         if (!window.confirm("Confirm delivery completion?")) return;
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${id}/deliver`);
+            await axios.put(`${API_URL}/api/donations/${id}/deliver`);
             alert("Great job! Delivery recorded.");
             fetchTasks(); // Refresh to move it to history
         } catch (err) {

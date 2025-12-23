@@ -5,6 +5,7 @@ import { PlusCircle, Clock, MapPin, CheckCircle, RefreshCcw, ArrowLeft, Trash2, 
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import ChatModal from '../components/ChatModal';
+import { API_URL } from '../config';
 
 const DonorDashboard = () => {
     const [showDonateForm, setShowDonateForm] = useState(false);
@@ -29,12 +30,12 @@ const DonorDashboard = () => {
 
         try {
             // Fetch Community Recent
-            const recentRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/recent`);
+            const recentRes = await axios.get(`${API_URL}/api/donations/recent`);
             setRecentDonations(recentRes.data);
 
             // Fetch My Donations (if logged in)
             if (user && user.id) {
-                const myRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/donor/${user.id}`);
+                const myRes = await axios.get(`${API_URL}/api/donations/donor/${user.id}`);
                 const sorted = myRes.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 setMyDonations(sorted);
             }
@@ -50,7 +51,7 @@ const DonorDashboard = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this donation?")) {
             try {
-                await axios.delete(`${import.meta.env.VITE_API_URL}/api/donations/${id}`);
+                await axios.delete(`${API_URL}/api/donations/${id}`);
                 setMyDonations(prev => prev.filter(d => d.id !== id));
                 // Also refresh recent list as it might be there
                 fetchDonations();
@@ -93,7 +94,7 @@ const DonorDashboard = () => {
         };
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/api/donations`, data);
+            await axios.post(`${API_URL}/api/donations`, data);
             setShowDonateForm(false);
             fetchDonations();
             alert('Donation posted successfully!');
@@ -111,7 +112,7 @@ const DonorDashboard = () => {
         // const user = userStr ? JSON.parse(userStr) : null; // Removed, now using state
 
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${id}/accept`, {
+            await axios.put(`${API_URL}/api/donations/${id}/accept`, {
                 volunteer_id: user.id
             });
             alert("Great! You are now delivering this donation.");
@@ -126,7 +127,7 @@ const DonorDashboard = () => {
         if (!window.confirm("Has the food been delivered successfully?")) return;
         try {
             // Re-use the existing endpoint
-            await axios.put(`${import.meta.env.VITE_API_URL}/api/donations/${id}/deliver`);
+            await axios.put(`${API_URL}/api/donations/${id}/deliver`);
             alert("Delivery confirmed! Points awarded.");
             fetchDonations();
         } catch (err) {

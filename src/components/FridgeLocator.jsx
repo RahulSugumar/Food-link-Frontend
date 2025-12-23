@@ -4,6 +4,7 @@ import { Search, MapPin, Navigation, Info, Clock, Thermometer } from 'lucide-rea
 import axios from 'axios';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../config';
 
 // Fix icons
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -47,7 +48,7 @@ const FridgeLocator = () => {
     useEffect(() => {
         const fetchFridges = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/fridges`);
+                const res = await axios.get(`${API_URL}/api/fridges`);
                 if (res.data) {
                     setFridges(res.data);
                 }

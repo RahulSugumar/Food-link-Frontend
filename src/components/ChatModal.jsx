@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { X, Send, User } from 'lucide-react';
+import { API_URL } from '../config';
 
 const ChatModal = ({ isOpen, onClose, donationId, currentUserId, receiverId, title }) => {
     const [messages, setMessages] = useState([]);
@@ -17,7 +18,7 @@ const ChatModal = ({ isOpen, onClose, donationId, currentUserId, receiverId, tit
         }
         try {
             console.log(`[Chat] Fetching for Donation: ${donationId}`);
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/chat/${donationId}`);
+            const res = await axios.get(`${API_URL}/api/chat/${donationId}`);
             console.log(`[Chat] Messages Fetched:`, res.data.length, res.data);
             setMessages(res.data);
         } catch (err) {
@@ -53,7 +54,7 @@ const ChatModal = ({ isOpen, onClose, donationId, currentUserId, receiverId, tit
         if (!newMessage.trim()) return;
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/api/chat/send`, {
+            await axios.post(`${API_URL}/api/chat/send`, {
                 sender_id: currentUserId,
                 receiver_id: receiverId,
                 donation_id: donationId,

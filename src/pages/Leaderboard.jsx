@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Trophy, Medal, ArrowLeft, Star, User, Crown, Sparkles, TrendingUp, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { API_URL } from '../config';
 
 const Leaderboard = () => {
     const [volunteers, setVolunteers] = useState([]);
@@ -17,7 +18,7 @@ const Leaderboard = () => {
 
     const fetchLeaderboard = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/donations/leaderboard`);
+            const res = await axios.get(`${API_URL}/api/donations/leaderboard`);
             setVolunteers(res.data.volunteers || []);
             setDonors(res.data.donors || []);
             setLoading(false);
